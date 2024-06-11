@@ -1,7 +1,6 @@
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { calculateMass, updatePositions } from './physics.js';
 
 // Scene setup
 const scene = new THREE.Scene();
@@ -12,26 +11,26 @@ camera.position.setZ(70);
 
 // Renderer setup
 const renderer = new THREE.WebGLRenderer({
-  canvas: document.querySelector('#bg'),
+    canvas: document.querySelector('#bg'),
 });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 // Sphere setup
-const earthGeometry = new THREE.SphereGeometry(5, 32);
-const earthTexture = new THREE.TextureLoader().load('earth.jpeg');
-const earthMaterial = new THREE.MeshBasicMaterial({
-  map: earthTexture,
+const sphereGeometry = new THREE.SphereGeometry(5, 32);
+const sphereTexture = new THREE.TextureLoader().load('earth.jpeg');
+const sphereMaterial = new THREE.MeshBasicMaterial({
+    map: sphereTexture,
 });
-const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-earth.rotation.x = .2;
+const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+sphere.rotation.x = .2;
 
-scene.add(earth);
+scene.add(sphere);
 
 const moonTexture = new THREE.TextureLoader().load('moon.png');
 const moonGeometry = new THREE.SphereGeometry(2, 32);
 const moonMaterial = new THREE.MeshBasicMaterial({
-  map: moonTexture,
+    map: moonTexture,
 });
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
 moon.position.set(30, 0, 0);
@@ -46,7 +45,7 @@ const pointLight2 = new THREE.PointLight(0xffffff, 50);
 pointLight2.position.set(-7, 5, 10);
 scene.add(pointLight2);
 
-// const ambientLight = new THREE.AmbientLight(0xffffff);
+const ambientLight = new THREE.AmbientLight(0xffffff);
 // scene.add(ambientLight);
 
 // Helpers setup
@@ -70,59 +69,27 @@ const panoramaGeometry = new THREE.SphereGeometry(500, 60, 40);
 panoramaGeometry.scale(-1, 1, 1);
 
 const panoramaMaterial = new THREE.MeshBasicMaterial({
-  map: panoramaTexture,
+    map: panoramaTexture,
 });
 
 const panoramaMesh = new THREE.Mesh(panoramaGeometry, panoramaMaterial);
 scene.add(panoramaMesh);
 
 // Animation loop
-
-
-const earthRadius = 5;
-const moonRadius = 2;
-
-const earthMass = calculateMass(earthRadius);
-const moonMass = calculateMass(moonRadius);
-
-const earthVelocity = new THREE.Vector3(0, 0, 0); // Initial velocity of Earth
-moon.position.set(5, 0, 0);
-const moonVelocity = new THREE.Vector3(0, 0.2, 0);
-
-
-let isPaused = false;
-let lastTime = performance.now();
-
-function animate(time) {
-  if (!isPaused) {
+function animate() {
     requestAnimationFrame(animate);
 
-    const dt = (time - lastTime) * 0.001; // Convert milliseconds to seconds
-    lastTime = time;
+    // sphere.rotation.x += 0.01;
+    sphere.rotation.y += 0.004;
 
-    updatePositions(
-      { position: moon.position, velocity: moonVelocity, mass: moonMass },
-      { position: earth.position, velocity: earthVelocity, mass: earthMass },
-      dt
-    );
+    moon.rotation.y += 0.003;
+    moon.position.x = 30 * Math.sin(moon.rotation.y);
+    moon.position.z = 30 * Math.cos(moon.rotation.y);
+
+    console.log(moon.position);
+
 
     renderer.render(scene, camera);
-  }
 }
 
-function togglePause() {
-  isPaused = !isPaused;
-
-  if (!isPaused) {
-    lastTime = performance.now();
-    animate(lastTime);
-  }
-}
-
-document.addEventListener('keydown', (event) => {
-  if (event.code === 'Space') {
-    togglePause();
-  }
-});
-
-animate(performance.now());
+animate();
