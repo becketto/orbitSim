@@ -10,6 +10,9 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.setZ(70);
 
+const timeSpeedSlider = document.getElementById('timeSpeedSlider');
+const moonVelocitySlider = document.getElementById('moonVelocitySlider');
+
 // Renderer setup
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector('#bg'),
@@ -34,7 +37,7 @@ const moonMaterial = new THREE.MeshBasicMaterial({
   map: moonTexture,
 });
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
-moon.position.set(30, 0, 0);
+moon.position.set(50, 0, 0);
 scene.add(moon);
 
 // Lights setup
@@ -85,9 +88,9 @@ const moonRadius = 2;
 const earthMass = calculateMass(earthRadius);
 const moonMass = calculateMass(moonRadius);
 
-const earthVelocity = new THREE.Vector3(0, 0, 0); // Initial velocity of Earth
+const earthVelocity = new THREE.Vector3(0, 0, .2); // Initial velocity of Earth
 // moon.position.set(5, 0, 0);
-const moonVelocity = new THREE.Vector3(0, 0, -3);
+const moonVelocity = new THREE.Vector3(0, 0, -1);
 
 
 let isPaused = false;
@@ -97,7 +100,10 @@ function animate(time) {
   if (!isPaused) {
     requestAnimationFrame(animate);
 
-    const dt = (time - lastTime) * 0.001; // Convert milliseconds to seconds
+    // const dt = (time - lastTime) * 0.01; // Convert milliseconds to seconds
+    const timeSpeed = parseFloat(timeSpeedSlider.value);
+    const dt = 0.1 * timeSpeed;
+
     lastTime = time;
 
     updatePositions(
