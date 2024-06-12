@@ -87,7 +87,7 @@ const moonMass = calculateMass(moonRadius);
 
 const earthVelocity = new THREE.Vector3(0, 0, 0); // Initial velocity of Earth
 // moon.position.set(5, 0, 0);
-const moonVelocity = new THREE.Vector3(4, 0, 0);
+const moonVelocity = new THREE.Vector3(0, 0, -3);
 
 
 let isPaused = false;
