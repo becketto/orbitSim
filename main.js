@@ -3,6 +3,16 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { calculateMass, updatePositions } from './physics.js';
 
+// Constants and initial values
+const earthRadius = 5;
+const moonRadius = 1;
+const earthMass = calculateMass(earthRadius);
+const moonMass = calculateMass(moonRadius);
+const earthVelocity = new THREE.Vector3(0, 0, 0);
+const moonVelocity = new THREE.Vector3(0, 0, 1.5);
+let isPaused = false;
+let lastTime = performance.now();
+
 // Scene setup
 const scene = new THREE.Scene();
 
@@ -11,6 +21,8 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 camera.position.setZ(70);
 
 const timeSpeedSlider = document.getElementById('timeSpeedSlider');
+
+
 const moonVelocitySlider = document.getElementById('moonVelocitySlider');
 
 // Renderer setup
@@ -21,18 +33,19 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 // Sphere setup
-const earthGeometry = new THREE.SphereGeometry(5, 32);
-const earthTexture = new THREE.TextureLoader().load('earth.jpeg');
+const earthGeometry = new THREE.SphereGeometry(earthRadius, 32);
+const earthTexture = new THREE.TextureLoader().load('earthMap.jpeg');
+const normalTexture = new THREE.TextureLoader().load('earthNormal.jpg');
 const earthMaterial = new THREE.MeshBasicMaterial({
   map: earthTexture,
+  normalMap: normalTexture,
 });
 const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-earth.rotation.x = .2;
-
+earth.rotation.x = 0.2;
 scene.add(earth);
 
 const moonTexture = new THREE.TextureLoader().load('moon.png');
-const moonGeometry = new THREE.SphereGeometry(2, 32);
+const moonGeometry = new THREE.SphereGeometry(moonRadius, 32);
 const moonMaterial = new THREE.MeshBasicMaterial({
   map: moonTexture,
 });
@@ -49,9 +62,6 @@ const pointLight2 = new THREE.PointLight(0xffffff, 50);
 pointLight2.position.set(-7, 5, 10);
 scene.add(pointLight2);
 
-// const ambientLight = new THREE.AmbientLight(0xffffff);
-// scene.add(ambientLight);
-
 // Helpers setup
 const gridHelper = new THREE.GridHelper(200, 50);
 scene.add(gridHelper);
@@ -67,50 +77,70 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enablePan = false;
 
 // Background setup
-const panoramaTexture = new THREE.TextureLoader().load('space.jpeg');
+const panoramaTexture = new THREE.TextureLoader().load('darkStars.jpg');
 const panoramaGeometry = new THREE.SphereGeometry(500, 60, 40);
-// Invert the geometry inside out
 panoramaGeometry.scale(-1, 1, 1);
-
 const panoramaMaterial = new THREE.MeshBasicMaterial({
   map: panoramaTexture,
 });
-
 const panoramaMesh = new THREE.Mesh(panoramaGeometry, panoramaMaterial);
 scene.add(panoramaMesh);
 
+
+const objects = [
+  { position: earth.position, velocity: earthVelocity, mass: earthMass },
+  { position: moon.position, velocity: moonVelocity, mass: moonMass },
+  // Add more objects as needed
+];
+
+const radiusInput = document.getElementById('radiusInput');
+const velocityInput = document.getElementById('velocityInput');
+const xPositionInput = document.getElementById('xPositionInput');
+const yPositionInput = document.getElementById('yPositionInput');
+const zPositionInput = document.getElementById('zPositionInput');
+const applyButton = document.getElementById('applyButton');
+
+applyButton.addEventListener('click', function () {
+  const radius = parseFloat(radiusInput.value);
+  const velocity = parseFloat(velocityInput.value);
+  const xPosition = parseFloat(xPositionInput.value);
+  const yPosition = parseFloat(yPositionInput.value);
+  const zPosition = parseFloat(zPositionInput.value);
+
+  const newGeometry = new THREE.SphereGeometry(radius, 32);
+  const newTexture = new THREE.TextureLoader().load('earthMap.jpeg');
+  const newMaterial = new THREE.MeshBasicMaterial({
+    map: newTexture,
+  });
+  const newMesh = new THREE.Mesh(newGeometry, newMaterial);
+  newMesh.position.set(xPosition, yPosition, zPosition);
+  scene.add(newMesh);
+
+  // Calculate the mass based on the radius
+  const mass = calculateMass(radius);
+
+  // Create a new velocity vector based on the user input
+  const newVelocity = new THREE.Vector3(0, 0, velocity);
+
+  // Add the new object to the objects array
+  objects.push({
+    position: newMesh.position,
+    velocity: newVelocity,
+    mass: mass,
+  });
+});
+
 // Animation loop
-
-
-const earthRadius = 5;
-const moonRadius = 2;
-
-const earthMass = calculateMass(earthRadius);
-const moonMass = calculateMass(moonRadius);
-
-const earthVelocity = new THREE.Vector3(0, 0, .2); // Initial velocity of Earth
-// moon.position.set(5, 0, 0);
-const moonVelocity = new THREE.Vector3(0, 0, -1);
-
-
-let isPaused = false;
-let lastTime = performance.now();
-
 function animate(time) {
   if (!isPaused) {
     requestAnimationFrame(animate);
 
-    // const dt = (time - lastTime) * 0.01; // Convert milliseconds to seconds
     const timeSpeed = parseFloat(timeSpeedSlider.value);
     const dt = 0.1 * timeSpeed;
 
     lastTime = time;
 
-    updatePositions(
-      { position: earth.position, velocity: earthVelocity, mass: earthMass },
-      { position: moon.position, velocity: moonVelocity, mass: moonMass },
-      dt
-    );
+    updatePositions(objects, dt);
 
     renderer.render(scene, camera);
   }
