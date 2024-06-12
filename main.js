@@ -64,17 +64,17 @@ scene.add(pointLight2);
 
 // Helpers setup
 const gridHelper = new THREE.GridHelper(200, 50);
-scene.add(gridHelper);
+// scene.add(gridHelper);
 
-const lightHelper = new THREE.PointLightHelper(pointLight);
-scene.add(lightHelper);
+// const lightHelper = new THREE.PointLightHelper(pointLight);
+// scene.add(lightHelper);
 
-const lightHelper2 = new THREE.PointLightHelper(pointLight2);
-scene.add(lightHelper2);
+// const lightHelper2 = new THREE.PointLightHelper(pointLight2);
+// scene.add(lightHelper2);
 
 // Orbit controls setup
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enablePan = false;
+// controls.enablePan = false;
 
 // Background setup
 const panoramaTexture = new THREE.TextureLoader().load('darkStars.jpg');
