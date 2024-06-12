@@ -86,8 +86,8 @@ const earthMass = calculateMass(earthRadius);
 const moonMass = calculateMass(moonRadius);
 
 const earthVelocity = new THREE.Vector3(0, 0, 0); // Initial velocity of Earth
-moon.position.set(5, 0, 0);
-const moonVelocity = new THREE.Vector3(0, 0.2, 0);
+// moon.position.set(5, 0, 0);
+const moonVelocity = new THREE.Vector3(4, 0, 0);
 
 
 let isPaused = false;
@@ -101,8 +101,8 @@ function animate(time) {
     lastTime = time;
 
     updatePositions(
-      { position: moon.position, velocity: moonVelocity, mass: moonMass },
       { position: earth.position, velocity: earthVelocity, mass: earthMass },
+      { position: moon.position, velocity: moonVelocity, mass: moonMass },
       dt
     );
 

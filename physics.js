@@ -10,25 +10,22 @@ function calculateGravitationalForce(mass1, mass2, distance) {
 }
 
 function updatePositions(obj1, obj2, dt) {
-    // const distance = obj1.position.distanceTo(obj2.position); //this doesn't work!!
-    const distance = obj1.position.clone().sub(obj2.position).length();
-    console.log(obj1.position);
-
-
+    const distance = obj1.position.distanceTo(obj2.position);
 
     if (distance > 0) {
         const direction = obj1.position.clone().sub(obj2.position).normalize();
+        const oppositeDirection = direction.clone().negate();
 
         const force = calculateGravitationalForce(obj1.mass, obj2.mass, distance);
-        const acceleration1 = force / obj1.mass;
-        const acceleration2 = force / obj2.mass;
 
-        obj1.velocity.addScaledVector(direction, acceleration1 * dt);
-        obj1.position.addScaledVector(obj1.velocity, dt);
+        const acceleration1 = direction.clone().multiplyScalar(force / obj1.mass);
+        const acceleration2 = oppositeDirection.clone().multiplyScalar(force / obj2.mass);
 
-        const oppositeDirection = direction.clone().negate();
-        obj2.velocity.addScaledVector(oppositeDirection, acceleration2 * dt);
-        obj2.position.addScaledVector(obj2.velocity, dt);
+        obj1.velocity.add(acceleration1.multiplyScalar(dt));
+        obj2.velocity.add(acceleration2.multiplyScalar(dt));
+
+        obj1.position.add(obj1.velocity.clone().multiplyScalar(dt));
+        obj2.position.add(obj2.velocity.clone().multiplyScalar(dt));
     }
 
     return {
