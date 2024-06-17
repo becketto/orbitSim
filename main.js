@@ -1,6 +1,6 @@
 import './style.css';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { calculateMass, updatePositions } from './physics.js';
 
 // Constants and initial values
@@ -64,13 +64,6 @@ scene.add(pointLight2);
 
 // Helpers setup
 const gridHelper = new THREE.GridHelper(200, 50);
-// scene.add(gridHelper);
-
-// const lightHelper = new THREE.PointLightHelper(pointLight);
-// scene.add(lightHelper);
-
-// const lightHelper2 = new THREE.PointLightHelper(pointLight2);
-// scene.add(lightHelper2);
 
 // Orbit controls setup
 const controls = new OrbitControls(camera, renderer.domElement);
