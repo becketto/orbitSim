@@ -42,7 +42,7 @@ const earthMaterial = new THREE.MeshBasicMaterial({
 });
 const earth = new THREE.Mesh(earthGeometry, earthMaterial);
 earth.rotation.x = 0.2;
-scene.add(earth);
+// scene.add(earth);
 
 const moonTexture = new THREE.TextureLoader().load('moon.png');
 const moonGeometry = new THREE.SphereGeometry(moonRadius, 32);
@@ -51,7 +51,7 @@ const moonMaterial = new THREE.MeshBasicMaterial({
 });
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
 moon.position.set(50, 0, 0);
-scene.add(moon);
+// scene.add(moon);
 
 // Lights setup
 const pointLight = new THREE.PointLight(0xffffff, 100);
@@ -81,9 +81,7 @@ scene.add(panoramaMesh);
 
 
 const objects = [
-  { position: earth.position, velocity: earthVelocity, mass: earthMass },
-  { position: moon.position, velocity: moonVelocity, mass: moonMass },
-  // Add more objects as needed
+
 ];
 
 const radiusInput = document.getElementById('radiusInput');
@@ -168,7 +166,7 @@ function generateRandomScene() {
   const maxVelocity = 2;
   const minPosition = -50;
   const maxPosition = 50;
-  const numSpheres = Math.floor(Math.random() * 10) + 5; // Generate between 5 and 14 spheres
+  const numSpheres = parseFloat(sceneNumber.value);
 
   // Clear the existing objects array
   objects.length = 0;
@@ -249,6 +247,7 @@ generateButton.addEventListener('click', function () {
 });
 
 const generateSceneButton = document.getElementById('generateSceneButton');
+const sceneNumber = document.getElementById('sceneNumber');
 
 generateSceneButton.addEventListener('click', function () {
   generateRandomScene();
