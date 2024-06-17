@@ -1,6 +1,6 @@
 import './style.css';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { calculateMass, updatePositions } from './physics.js';
 
 // Constants and initial values
@@ -123,6 +123,94 @@ applyButton.addEventListener('click', function () {
   });
 });
 
+function generateRandomSphere() {
+  const minRadius = 1;
+  const maxRadius = 5;
+  const minVelocity = -2;
+  const maxVelocity = 2;
+  const minPosition = -50;
+  const maxPosition = 50;
+
+  const radius = Math.random() * (maxRadius - minRadius) + minRadius;
+  const velocity = new THREE.Vector3(
+    Math.random() * (maxVelocity - minVelocity) + minVelocity,
+    Math.random() * (maxVelocity - minVelocity) + minVelocity,
+    Math.random() * (maxVelocity - minVelocity) + minVelocity
+  );
+  const position = new THREE.Vector3(
+    Math.random() * (maxPosition - minPosition) + minPosition,
+    Math.random() * (maxPosition - minPosition) + minPosition,
+    Math.random() * (maxPosition - minPosition) + minPosition
+  );
+
+  const newGeometry = new THREE.SphereGeometry(radius, 32);
+  const newTexture = new THREE.TextureLoader().load('earthMap.jpeg');
+  const newMaterial = new THREE.MeshBasicMaterial({
+    map: newTexture,
+  });
+  const newMesh = new THREE.Mesh(newGeometry, newMaterial);
+  newMesh.position.copy(position);
+  scene.add(newMesh);
+
+  const mass = calculateMass(radius);
+
+  objects.push({
+    position: newMesh.position,
+    velocity: velocity,
+    mass: mass,
+  });
+}
+
+function generateRandomScene() {
+  const minRadius = 1;
+  const maxRadius = 5;
+  const minVelocity = -2;
+  const maxVelocity = 2;
+  const minPosition = -50;
+  const maxPosition = 50;
+  const numSpheres = Math.floor(Math.random() * 10) + 5; // Generate between 5 and 14 spheres
+
+  // Clear the existing objects array
+  objects.length = 0;
+
+  // Remove all existing spheres from the scene
+  scene.traverse(function (object) {
+    if (object.isMesh && object !== earth && object !== moon && object !== panoramaMesh) {
+      scene.remove(object);
+    }
+  });
+
+  for (let i = 0; i < numSpheres; i++) {
+    const radius = Math.random() * (maxRadius - minRadius) + minRadius;
+    const velocity = new THREE.Vector3(
+      Math.random() * (maxVelocity - minVelocity) + minVelocity,
+      Math.random() * (maxVelocity - minVelocity) + minVelocity,
+      Math.random() * (maxVelocity - minVelocity) + minVelocity
+    );
+    const position = new THREE.Vector3(
+      Math.random() * (maxPosition - minPosition) + minPosition,
+      Math.random() * (maxPosition - minPosition) + minPosition,
+      Math.random() * (maxPosition - minPosition) + minPosition
+    );
+
+    const newGeometry = new THREE.SphereGeometry(radius, 32);
+    const newMaterial = new THREE.MeshBasicMaterial({
+      color: Math.random() * 0xffffff, // Random color
+    });
+    const newMesh = new THREE.Mesh(newGeometry, newMaterial);
+    newMesh.position.copy(position);
+    scene.add(newMesh);
+
+    const mass = calculateMass(radius);
+
+    objects.push({
+      position: newMesh.position,
+      velocity: velocity,
+      mass: mass,
+    });
+  }
+}
+
 // Animation loop
 function animate(time) {
   if (!isPaused) {
@@ -152,6 +240,18 @@ document.addEventListener('keydown', (event) => {
   if (event.code === 'Space') {
     togglePause();
   }
+});
+
+const generateButton = document.getElementById('generateButton');
+
+generateButton.addEventListener('click', function () {
+  generateRandomSphere();
+});
+
+const generateSceneButton = document.getElementById('generateSceneButton');
+
+generateSceneButton.addEventListener('click', function () {
+  generateRandomScene();
 });
 
 animate(performance.now());
