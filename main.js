@@ -1,7 +1,7 @@
 import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { calculateMass, updatePositions } from './physics.js';
+import { calculateMass, calculateGravitationalForce } from './physics.js';
 
 // Constants and initial values
 const earthRadius = 5;
@@ -97,14 +97,12 @@ applyButton.addEventListener('click', function () {
   const xPosition = parseFloat(xPositionInput.value);
   const yPosition = parseFloat(yPositionInput.value);
   const zPosition = parseFloat(zPositionInput.value);
-
   const newGeometry = new THREE.SphereGeometry(radius, 32);
-  const newTexture = new THREE.TextureLoader().load('earthMap.jpeg');
   const newMaterial = new THREE.MeshBasicMaterial({
-    map: newTexture,
+    color: Math.random() * 0xffffff, // Random color
   });
   const newMesh = new THREE.Mesh(newGeometry, newMaterial);
-  newMesh.position.set(xPosition, yPosition, zPosition);
+  newMesh.position.copy(position);
   scene.add(newMesh);
 
   // Calculate the mass based on the radius
@@ -142,9 +140,8 @@ function generateRandomSphere() {
   );
 
   const newGeometry = new THREE.SphereGeometry(radius, 32);
-  const newTexture = new THREE.TextureLoader().load('earthMap.jpeg');
   const newMaterial = new THREE.MeshBasicMaterial({
-    map: newTexture,
+    color: Math.random() * 0xffffff, // Random color
   });
   const newMesh = new THREE.Mesh(newGeometry, newMaterial);
   newMesh.position.copy(position);
@@ -162,21 +159,21 @@ function generateRandomSphere() {
 function generateRandomScene() {
   const minRadius = 1;
   const maxRadius = 5;
-  const minVelocity = -2;
-  const maxVelocity = 2;
+  const minVelocity = -1;
+  const maxVelocity = 1;
   const minPosition = -50;
   const maxPosition = 50;
   const numSpheres = parseFloat(sceneNumber.value);
 
-  // Clear the existing objects array
-  objects.length = 0;
+  // // Clear the existing objects array
+  // objects.length = 0;
 
-  // Remove all existing spheres from the scene
-  scene.traverse(function (object) {
-    if (object.isMesh && object !== earth && object !== moon && object !== panoramaMesh) {
-      scene.remove(object);
-    }
-  });
+  // // Remove all existing spheres from the scene
+  // scene.traverse(function (object) {
+  //   if (object.isMesh && object !== earth && object !== moon && object !== panoramaMesh) {
+  //     scene.remove(object);
+  //   }
+  // });
 
   for (let i = 0; i < numSpheres; i++) {
     const radius = Math.random() * (maxRadius - minRadius) + minRadius;
@@ -199,13 +196,72 @@ function generateRandomScene() {
     newMesh.position.copy(position);
     scene.add(newMesh);
 
-    const mass = calculateMass(radius);
+    // const mass = calculateMass(radius);
 
     objects.push({
       position: newMesh.position,
       velocity: velocity,
-      mass: mass,
+      radius: radius,
+      mass: calculateMass(radius),
     });
+  }
+}
+
+//Physics
+function updatePositions(objects, dt) {
+  const numObjects = objects.length;
+
+  for (let i = 0; i < numObjects; i++) {
+    const obj1 = objects[i];
+
+    if (!obj1) continue; // Skip if obj1 is undefined
+
+    for (let j = i + 1; j < numObjects; j++) {
+      const obj2 = objects[j];
+
+      if (!obj2) continue; // Skip if obj2 is undefined
+
+      const distance = obj1.position.distanceTo(obj2.position);
+      const collisionDistance = obj1.radius + obj2.radius;
+
+      if (distance > 0 && distance < collisionDistance) {
+        // Collision detected, merge the spheres
+        const mergedMass = obj1.mass + obj2.mass;
+        const mergedRadius = Math.pow((3 * mergedMass) / (4 * Math.PI), 1 / 3);
+
+        const mergedPosition = obj1.position.clone().lerp(obj2.position, obj2.mass / mergedMass);
+        const mergedVelocity = obj1.velocity.clone().multiplyScalar(obj1.mass / mergedMass)
+          .add(obj2.velocity.clone().multiplyScalar(obj2.mass / mergedMass));
+
+        obj1.position.copy(mergedPosition);
+        obj1.velocity.copy(mergedVelocity);
+        obj1.mass = mergedMass;
+        obj1.radius = mergedRadius;
+
+        // Remove the merged sphere mesh from the scene
+        scene.remove(obj2.mesh);
+
+        objects.splice(j, 1);
+        j--;
+      } else if (distance > 0) {
+        const direction = obj2.position.clone().sub(obj1.position).normalize();
+        const force = calculateGravitationalForce(obj1.mass, obj2.mass, distance);
+
+        const acceleration1 = direction.clone().multiplyScalar(force / obj1.mass);
+        const acceleration2 = direction.clone().multiplyScalar(-force / obj2.mass);
+
+        obj1.velocity.add(acceleration1.clone().multiplyScalar(dt));
+        obj2.velocity.add(acceleration2.clone().multiplyScalar(dt));
+      }
+    }
+  }
+
+  for (let i = 0; i < objects.length; i++) {
+    const obj = objects[i];
+
+    if (!obj) continue; // Skip if obj is undefined
+
+    obj.position.add(obj.velocity.clone().multiplyScalar(dt));
   }
 }
 
