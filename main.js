@@ -17,7 +17,7 @@ let lastTime = performance.now();
 const scene = new THREE.Scene();
 
 // Camera setup
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
 camera.position.setZ(70);
 
 const timeSpeedSlider = document.getElementById('timeSpeedSlider');
@@ -71,7 +71,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // Background setup
 const panoramaTexture = new THREE.TextureLoader().load('darkStars.jpg');
-const panoramaGeometry = new THREE.SphereGeometry(500, 60, 40);
+const panoramaGeometry = new THREE.SphereGeometry(2500, 60, 40);
 panoramaGeometry.scale(-1, 1, 1);
 const panoramaMaterial = new THREE.MeshBasicMaterial({
   map: panoramaTexture,
@@ -162,17 +162,20 @@ function generateRandomSphere() {
   });
 }
 
+
+//! If they collide at a certain velocity, it splits apart
 function generateRandomScene() {
-  const minRadius = 1;
+  const minRadius = .5;
   const maxRadius = 5;
-  const minVelocity = -2;
-  const maxVelocity = 2;
-  const minPosition = -50;
-  const maxPosition = 50;
+  const minVelocity = -5;
+  const maxVelocity = 5;
+  const minPosition = -500;
+  const maxPosition = 500;
   const numSpheres = parseFloat(sceneNumber.value);
 
   for (let i = 0; i < numSpheres; i++) {
     const radius = Math.random() * (maxRadius - minRadius) + minRadius;
+    // const radius = 5;
     const velocity = new THREE.Vector3(
       Math.random() * (maxVelocity - minVelocity) + minVelocity,
       Math.random() * (maxVelocity - minVelocity) + minVelocity,
@@ -216,25 +219,48 @@ function updatePositions(objects, dt) {
 
       const distance = obj1.position.distanceTo(obj2.position);
       const collisionDistance = obj1.radius + obj2.radius;
-      // console.log(collisionDistance);
 
       if (distance > 0 && distance < collisionDistance) {
-        //collision
+        // collision
         console.log('collision');
         const mergedMass = obj1.mass + obj2.mass;
         const mergedRadius = Math.pow((3 * mergedMass) / (4 * Math.PI), 1 / 3);
         const mergedPosition = obj1.position.clone().lerp(obj2.position, obj2.mass / mergedMass);
-        const mergedVelocity = obj1.velocity.clone().multiplyScalar(obj1.mass / mergedMass)
-          .add(obj2.velocity.clone().multiplyScalar(obj2.mass / mergedMass));
+        const mergedVelocity = obj1.velocity.clone().multiplyScalar(obj1.mass)
+          .add(obj2.velocity.clone().multiplyScalar(obj2.mass))
+          .divideScalar(mergedMass);
 
-        obj1.position.copy(mergedPosition);
-        obj1.velocity.copy(mergedVelocity);
-        obj1.mass = mergedMass;
-        obj1.radius = mergedRadius;
+        console.log(obj1.radius, obj1.mass, obj2.radius, obj2.mass, mergedMass, mergedRadius);
 
+        // console.log(mergedMass, mergedRadius, mergedPosition, mergedVelocity);
+        // Create a new merged object
+        const mergedGeometry = new THREE.SphereGeometry(mergedRadius, 32);
+        const mergedMaterial = new THREE.MeshBasicMaterial({
+          color: Math.random() * 0xffffff, // Random color
+        });
+        const mergedMesh = new THREE.Mesh(mergedGeometry, mergedMaterial);
+        mergedMesh.position.copy(mergedPosition);
+
+        // Add the new merged object to the scene
+        scene.add(mergedMesh);
+
+        // Remove the colliding objects from the scene and the objects array
+        scene.remove(obj1.mesh);
         scene.remove(obj2.mesh);
         objects.splice(j, 1);
-        j--;
+        objects.splice(i, 1);
+
+        // Add the new merged object to the objects array
+        objects.push({
+          mesh: mergedMesh,
+          position: mergedPosition,
+          velocity: mergedVelocity,
+          radius: mergedRadius,
+          mass: mergedMass,
+        });
+
+        i--; // Decrement i to account for the removed object
+        break; // Exit the inner loop since the current object has been merged
       } else if (distance > 0) {
         const direction = obj2.position.clone().sub(obj1.position).normalize();
         const force = calculateGravitationalForce(obj1.mass, obj2.mass, distance);
@@ -248,10 +274,10 @@ function updatePositions(objects, dt) {
     }
   }
 
-
-  for (let i = 0; i < numObjects; i++) {
+  for (let i = 0; i < objects.length; i++) {
     const obj = objects[i];
     obj.position.add(obj.velocity.clone().multiplyScalar(dt));
+    obj.mesh.position.copy(obj.position); // Update the mesh position
   }
 }
 
