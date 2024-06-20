@@ -17,7 +17,7 @@ let lastTime = performance.now();
 const scene = new THREE.Scene();
 
 // Camera setup
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 50000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
 camera.position.setZ(70);
 
 const timeSpeedSlider = document.getElementById('timeSpeedSlider');
@@ -71,7 +71,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // Background setup
 const panoramaTexture = new THREE.TextureLoader().load('darkStars.jpg');
-const panoramaGeometry = new THREE.SphereGeometry(15000, 60, 40);
+const panoramaGeometry = new THREE.SphereGeometry(2500, 60, 40);
 panoramaGeometry.scale(-1, 1, 1);
 const panoramaMaterial = new THREE.MeshBasicMaterial({
   map: panoramaTexture,
@@ -124,18 +124,13 @@ applyButton.addEventListener('click', function () {
 
 function generateRandomSphere() {
   const minRadius = 1;
-  const maxRadius = 100;
+  const maxRadius = 5;
   const minVelocity = -2;
   const maxVelocity = 2;
   const minPosition = -50;
   const maxPosition = 50;
 
-  const exponentialDistribution = (min, max, lambda) => {
-    return min - Math.log(1 - Math.random()) / lambda * (max - min);
-  };
-
-  // const radius = Math.random() * (maxRadius - minRadius) + minRadius;
-  const radius = exponentialDistribution(minRadius, maxRadius, 1);
+  const radius = Math.random() * (maxRadius - minRadius) + minRadius;
   const velocity = new THREE.Vector3(
     Math.random() * (maxVelocity - minVelocity) + minVelocity,
     Math.random() * (maxVelocity - minVelocity) + minVelocity,
@@ -170,31 +165,22 @@ function generateRandomSphere() {
 
 //! If they collide at a certain velocity, it splits apart
 function generateRandomScene() {
-  const minRadius = 2;
-  const maxRadius = 150;
+  const minRadius = .5;
+  const maxRadius = 5;
   const minVelocity = -5;
-  const maxVelocity = 25;
-  const minPosition = -1500;
-  const maxPosition = 1500;
+  const maxVelocity = 5;
+  const minPosition = -500;
+  const maxPosition = 500;
   const numSpheres = parseFloat(sceneNumber.value);
 
-  const exponentialDistribution = (min, max, lambda) => {
-    return min - Math.log(1 - Math.random()) / lambda * (max - min);
-  };
-
   for (let i = 0; i < numSpheres; i++) {
-    // const radius = Math.random() * (maxRadius - minRadius) + minRadius;
+    const radius = Math.random() * (maxRadius - minRadius) + minRadius;
     // const radius = 5;
-    const radius = exponentialDistribution(minRadius, maxRadius, 60);
-    const velocity = new THREE.Vector3(exponentialDistribution(minVelocity, maxVelocity, 4),
-      exponentialDistribution(minVelocity, maxVelocity, 4),
-      exponentialDistribution(minVelocity, maxVelocity, 4));
-
-    // const velocity = new THREE.Vector3(
-    //   Math.random() * (maxVelocity - minVelocity) + minVelocity,
-    //   Math.random() * (maxVelocity - minVelocity) + minVelocity,
-    //   Math.random() * (maxVelocity - minVelocity) + minVelocity
-    // );
+    const velocity = new THREE.Vector3(
+      Math.random() * (maxVelocity - minVelocity) + minVelocity,
+      Math.random() * (maxVelocity - minVelocity) + minVelocity,
+      Math.random() * (maxVelocity - minVelocity) + minVelocity
+    );
     const position = new THREE.Vector3(
       Math.random() * (maxPosition - minPosition) + minPosition,
       Math.random() * (maxPosition - minPosition) + minPosition,
@@ -224,21 +210,9 @@ function generateRandomScene() {
 //* physics
 function updatePositions(objects, dt) {
   const numObjects = objects.length;
-  const despawnDistance = 6000;
-  const minSphereCount = 50;
-  const addSphereCount = 300;
 
   for (let i = 0; i < numObjects; i++) {
     const obj1 = objects[i];
-
-    // Check if the object is beyond the despawn distance
-    if (obj1.position.length() > despawnDistance) {
-      console.log('despawn');
-      scene.remove(obj1.mesh);
-      objects.splice(i, 1);
-      i--;
-      continue;
-    }
 
     for (let j = i + 1; j < numObjects; j++) {
       const obj2 = objects[j];
@@ -248,7 +222,7 @@ function updatePositions(objects, dt) {
 
       if (distance > 0 && distance < collisionDistance) {
         // collision
-        // console.log('collision');
+        console.log('collision');
         const mergedMass = obj1.mass + obj2.mass;
         const mergedRadius = Math.pow((3 * mergedMass) / (4 * Math.PI), 1 / 3);
         const mergedPosition = obj1.position.clone().lerp(obj2.position, obj2.mass / mergedMass);
@@ -256,8 +230,9 @@ function updatePositions(objects, dt) {
           .add(obj2.velocity.clone().multiplyScalar(obj2.mass))
           .divideScalar(mergedMass);
 
-        // console.log(obj1.radius, obj1.mass, obj2.radius, obj2.mass, mergedMass, mergedRadius);
+        console.log(obj1.radius, obj1.mass, obj2.radius, obj2.mass, mergedMass, mergedRadius);
 
+        // console.log(mergedMass, mergedRadius, mergedPosition, mergedVelocity);
         // Create a new merged object
         const mergedGeometry = new THREE.SphereGeometry(mergedRadius, 32);
         const mergedMaterial = new THREE.MeshBasicMaterial({
@@ -303,11 +278,6 @@ function updatePositions(objects, dt) {
     const obj = objects[i];
     obj.position.add(obj.velocity.clone().multiplyScalar(dt));
     obj.mesh.position.copy(obj.position); // Update the mesh position
-  }
-
-  if (objects.length < minSphereCount) {
-    // Generate additional spheres
-    generateRandomScene(addSphereCount);
   }
 
   const sphereCountElement = document.getElementById('sphereCount');
