@@ -91,36 +91,36 @@ const yPositionInput = document.getElementById('yPositionInput');
 const zPositionInput = document.getElementById('zPositionInput');
 const applyButton = document.getElementById('applyButton');
 
-applyButton.addEventListener('click', function () {
-  const radius = parseFloat(radiusInput.value);
-  const velocity = parseFloat(velocityInput.value);
-  const xPosition = parseFloat(xPositionInput.value);
-  const yPosition = parseFloat(yPositionInput.value);
-  const zPosition = parseFloat(zPositionInput.value);
+// applyButton.addEventListener('click', function () {
+//   const radius = parseFloat(radiusInput.value);
+//   const velocity = parseFloat(velocityInput.value);
+//   const xPosition = parseFloat(xPositionInput.value);
+//   const yPosition = parseFloat(yPositionInput.value);
+//   const zPosition = parseFloat(zPositionInput.value);
 
-  const newGeometry = new THREE.SphereGeometry(radius, 32);
-  const newTexture = new THREE.TextureLoader().load('earthMap.jpeg');
-  const newMaterial = new THREE.MeshBasicMaterial({
-    map: newTexture,
-  });
-  const newMesh = new THREE.Mesh(newGeometry, newMaterial);
-  newMesh.position.set(xPosition, yPosition, zPosition);
-  scene.add(newMesh);
+//   const newGeometry = new THREE.SphereGeometry(radius, 32);
+//   const newTexture = new THREE.TextureLoader().load('earthMap.jpeg');
+//   const newMaterial = new THREE.MeshBasicMaterial({
+//     map: newTexture,
+//   });
+//   const newMesh = new THREE.Mesh(newGeometry, newMaterial);
+//   newMesh.position.set(xPosition, yPosition, zPosition);
+//   scene.add(newMesh);
 
-  // Calculate the mass based on the radius
-  // const mass = calculateMass(radius);
+//   // Calculate the mass based on the radius
+//   // const mass = calculateMass(radius);
 
-  // Create a new velocity vector based on the user input
-  const newVelocity = new THREE.Vector3(0, 0, velocity);
+//   // Create a new velocity vector based on the user input
+//   const newVelocity = new THREE.Vector3(0, 0, velocity);
 
-  // Add the new object to the objects array
-  objects.push({
-    position: newMesh.position,
-    velocity: newVelocity,
-    radius: radius,
-    mass: calculateMass(radius),
-  });
-});
+//   // Add the new object to the objects array
+//   objects.push({
+//     position: newMesh.position,
+//     velocity: newVelocity,
+//     radius: radius,
+//     mass: calculateMass(radius),
+//   });
+// });
 
 function generateRandomSphere() {
   const minRadius = 1;
